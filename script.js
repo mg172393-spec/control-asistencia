@@ -2,6 +2,7 @@
 // CONFIGURACIÓN CENTRAL DE SUPABASE
 // ==========================================
 const SUPABASE_URL = "https://lgejowajaxmmqdxwrsjc.supabase.co";
+// Al pegar el código, asegúrate de que use la clave completa que copiaste con el botón de los cuadritos
 const SUPABASE_ANON_KEY = "sb_publishable_13IRWRbW23xxWdVXeK8YOQ_A-SkI7oJ";
 
 // Inicialización nativa del cliente de la base de datos en la nube
@@ -76,7 +77,6 @@ function inicializarApp() {
     if (txtUsername && usuarioLogueado) txtUsername.value = usuarioLogueado.nombreCompleto;
     establecerSaludo();
 
-    // Corrección de seguridad con paréntesis para asegurar que lea 'admin' correctamente
     if (usuarioLogueado && (usuarioLogueado.rol === 'admin' || usuarioLogueado.role === 'admin')) {
         if (sidebar) sidebar.classList.remove('hidden');
         actualizarListaUsuariosAdmin();
@@ -138,8 +138,8 @@ async function procesarMarcado(accion) {
             const longitud = position.coords.longitude.toString();
             const ahora = new Date();
             const fechaHoy = ahora.toLocaleDateString(); 
-            const horaActual = ahora.toLocaleTimeString();
-            const urlMapa = "https://maps.google.com/?q=" + latitud + "," + longitud;
+            const horaActual = Scientific = ahora.toLocaleTimeString();
+            const urlMapa = `https://maps.google.com/?q=${latitud},${longitud}`;
 
             try {
                 const { data: filas, error: fetchError } = await supabase
