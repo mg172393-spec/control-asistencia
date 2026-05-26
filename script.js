@@ -76,7 +76,8 @@ function inicializarApp() {
     if (txtUsername && usuarioLogueado) txtUsername.value = usuarioLogueado.nombreCompleto;
     establecerSaludo();
 
-    if (usuarioLogueado && usuarioLogueado.role === 'admin' || usuarioLogueado.rol === 'admin') {
+    // Corrección de seguridad con paréntesis para asegurar que lea 'admin' correctamente
+    if (usuarioLogueado && (usuarioLogueado.rol === 'admin' || usuarioLogueado.role === 'admin')) {
         if (sidebar) sidebar.classList.remove('hidden');
         actualizarListaUsuariosAdmin();
     } else {
@@ -136,12 +137,11 @@ async function procesarMarcado(accion) {
             const latitud = position.coords.latitude.toString();
             const longitud = position.coords.longitude.toString();
             const ahora = new Date();
-            const fechaHoy = ahora.toLocaleDateString(); // Formato D/M/YYYY o DD/MM/YYYY
+            const fechaHoy = ahora.toLocaleDateString(); 
             const horaActual = ahora.toLocaleTimeString();
             const urlMapa = "https://maps.google.com/?q=" + latitud + "," + longitud;
 
             try {
-                // CONSULTA A LA NUBE: Buscar si este usuario ya tiene un registro hoy en Supabase
                 const { data: filas, error: fetchError } = await supabase
                     .from('fichajes')
                     .select('*')
@@ -158,7 +158,6 @@ async function procesarMarcado(accion) {
                         return;
                     }
                     
-                    // GUARDAR EN LA NUBE: Crear nueva fila única en internet
                     const { error: insertError } = await supabase
                         .from('fichajes')
                         .insert([{
@@ -177,7 +176,6 @@ async function procesarMarcado(accion) {
                     mostrarMensaje(`✅ Entrada registrada en la NUBE con éxito (${horaActual}).`, 'green');
 
                 } else {
-                    // Para cualquier otra acción, debe existir la entrada previa en la nube
                     if (!registroExistente) {
                         mostrarMensaje('❌ No puedes marcar esto sin antes haber registrado una Entrada hoy.', 'red');
                         return;
@@ -197,7 +195,6 @@ async function procesarMarcado(accion) {
                         datosActualizados.hora_salida = horaActual;
                     }
 
-                    // ACTUALIZAR EN LA NUBE: Modificar la fila del empleado en tiempo real
                     const { error: updateError } = await supabase
                         .from('fichajes')
                         .update(datosActualizados)
@@ -316,11 +313,10 @@ window.eliminarUsuario = function(codigo) {
     }
 };
 
-// --- REPORTE DE EXCEL CENTRALIZADO (DESCARGA DESDE LA NUBE EN TIEMPO REAL) ---
+// --- REPORTE DE EXCEL CENTRALIZADO ---
 async function descargarExcelNativo() {
     mostrarMensaje('🔄 Solicitando registros históricos al servidor central...', 'orange');
 
-    // 1. Descargar absolutamente todos los datos de la base de datos central en la nube
     const { data: todosLosRegistros, error: queryError } = await supabase
         .from('fichajes')
         .select('*');
@@ -345,7 +341,6 @@ async function descargarExcelNativo() {
         dateFin = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10), 23, 59, 59);
     }
 
-    // 2. Filtrar matemáticamente los marcajes unificados de todos los empleados
     const registrosFiltrados = todosLosRegistros.filter(r => {
         if (!r.fecha) return false;
         const partes = r.fecha.split('/'); 
@@ -368,7 +363,6 @@ async function descargarExcelNativo() {
         return;
     }
 
-    // 3. Compilar el archivo estructurado para Excel Latinoamericano
     let filasCSV = [];
     filasCSV.push("Nombre;Fecha;Hora Entrada;Inicio Tiempo Libre;Fin Tiempo Libre;Hora Salida;Latitud;Longitud;Enlace Mapa");
 
@@ -388,8 +382,6 @@ async function descargarExcelNativo() {
     });
 
     let textoFinal = filasCSV.join("\r\n");
-    
-    // Inyección de BOM UTF-8 para evitar errores de codificación
     const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
     const blob = new Blob([BOM, textoFinal], { type: 'text/csv;charset=utf-8;' });
     
