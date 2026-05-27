@@ -1,4 +1,6 @@
-/* --- ESTILOS GENERALES Y RESET --- */
+/* ==========================================================
+   🎨 1. ESTILOS GENERALES Y CONFIGURACIÓN BASE
+   ========================================================== */
 body, html {
     margin: 0;
     padding: 0;
@@ -6,14 +8,19 @@ body, html {
     background-color: #f4f6f9;
 }
 
-/* --- LOGGIN SCREEN --- */
+/* ==========================================================
+   🔑 2. PANTALLA DE INICIO DE SESIÓN (LOGIN)
+   ========================================================== */
 .login-container {
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
     background-color: #eef2f5;
+    padding: 20px; /* Evita que la tarjeta toque los bordes físicos del celular */
+    box-sizing: border-box;
 }
+
 .login-box {
     background: white;
     padding: 35px;
@@ -22,15 +29,39 @@ body, html {
     width: 100%;
     max-width: 380px;
     text-align: center;
+    box-sizing: border-box;
 }
+
+.login-box h2 {
+    margin-top: 0;
+    color: #2c3e50;
+}
+
+.login-box p {
+    color: #7f8c8d;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.login-box label {
+    display: block;
+    text-align: left;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #34495e;
+    font-size: 14px;
+}
+
 .login-box input {
     width: 100%;
     padding: 10px;
-    margin: 10px 0 20px 0;
+    margin-bottom: 20px;
     border: 1px solid #ccc;
     border-radius: 5px;
     box-sizing: border-box;
+    font-size: 14px;
 }
+
 .login-box button {
     width: 100%;
     padding: 12px;
@@ -39,16 +70,32 @@ body, html {
     border: none;
     border-radius: 5px;
     font-size: 16px;
+    font-weight: bold;
     cursor: pointer;
+    transition: background 0.2s;
 }
 
-/* --- DISTRIBUCIÓN PRINCIPAL DEL PANEL (SIDEBAR + MAIN) --- */
+.login-box button:hover {
+    background-color: #2980b9;
+}
+
+#login-status {
+    margin-top: 15px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* ==========================================================
+   📊 3. DISTRIBUCIÓN PRINCIPAL DEL PANEL (PC / ESCRITORIO)
+   ========================================================== */
 .app-layout {
     display: flex;
+    flex-direction: row; /* Lado a lado por defecto */
     min-height: 100vh;
     width: 100%;
 }
 
+/* Menú Lateral */
 .sidebar {
     width: 280px;
     background-color: #2c3e50;
@@ -58,14 +105,30 @@ body, html {
     flex-shrink: 0;
 }
 
+.sidebar h2 {
+    font-size: 20px;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.sidebar hr {
+    border: 0;
+    height: 1px;
+    background: #34495e;
+    margin: 15px 0;
+}
+
+/* Zona de Contenido de Trabajo Principal */
 .main-content {
     flex-grow: 1;
     padding: 40px;
     display: flex;
     justify-content: center;
     align-items: flex-start;
+    box-sizing: border-box;
 }
 
+/* Tarjeta Central del Panel de Fichaje */
 .dashboard-card {
     background: white;
     padding: 30px;
@@ -73,62 +136,159 @@ body, html {
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     max-width: 650px;
     width: 100%;
+    box-sizing: border-box;
 }
 
-/* --- WIDGET EN TIEMPO REAL (RELOJ Y CLIMA) --- */
+#welcome-banner {
+    color: #2c3e50;
+    font-size: 26px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+/* ==========================================================
+   🌤️ 4. WIDGET EN TIEMPO REAL (RELOJ, FECHA Y CLIMA)
+   ========================================================== */
 .weather-widget {
     background: #ebf5fb;
     border-left: 5px solid #3498db;
     padding: 15px;
     border-radius: 6px;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 6px;
+    box-sizing: border-box;
 }
-#live-date { font-weight: bold; color: #2c3e50; }
-#live-time { font-size: 20px; font-weight: bold; color: #2980b9; font-family: monospace; }
-#live-weather { color: #555; font-size: 14px; }
 
-/* --- CONTROLES Y RECUADROS --- */
+#live-date {
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 14px;
+}
+
+#live-time {
+    font-size: 22px;
+    font-weight: bold;
+    color: #2980b9;
+    font-family: monospace;
+}
+
+#live-weather {
+    color: #555;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* ==========================================================
+   🌅 5. BOTONES Y ACCIONES DE ASISTENCIA
+   ========================================================== */
+.user-identified-box {
+    margin-bottom: 15px;
+}
+
+.user-identified-box label {
+    font-weight: bold;
+    font-size: 14px;
+    color: #7f8c8d;
+}
+
 .user-identified-box input {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     font-size: 16px;
+    font-weight: bold;
+    color: #2c3e50;
     border: 1px solid #ddd;
     background-color: #fafafa;
     border-radius: 5px;
-    margin-top: 5px;
+    margin-top: 6px;
+    box-sizing: border-box;
 }
 
-/* MATRIZ DE BOTONES */
+.instruction-text {
+    font-size: 14px;
+    color: #7f8c8d;
+    margin-bottom: 15px;
+}
+
+/* Cuadrícula de Marcación (2 columnas en PC) */
 .buttons-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 15px;
     margin: 20px 0;
 }
+
 .btn-clock {
-    padding: 15px;
+    padding: 16px;
     font-size: 15px;
     font-weight: bold;
     color: white;
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.1s, background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-clock:active {
+    transform: scale(0.98);
+}
+
+.btn-in { background-color: #2ecc71; }
+.btn-in:hover { background-color: #27ae60; }
+
+.btn-break-start { background-color: #f1c40f; color: #333; }
+.btn-break-start:hover { background-color: #d4ac0d; }
+
+.btn-break-end { background-color: #e67e22; }
+.btn-break-end:hover { background-color: #d35400; }
+
+.btn-out { background-color: #e74c3c; }
+.btn-out:hover { background-color: #c0392b; }
+
+.separator {
+    border: 0;
+    height: 1px;
+    background: #eaeded;
+    margin: 20px 0;
+}
+
+.status-zone {
+    margin: 15px 0;
+    font-weight: bold;
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.btn-secondary {
+    width: 100%;
+    padding: 12px;
+    background-color: #95a5a6;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
     transition: background 0.2s;
 }
-.btn-in { background-color: #2ecc71; }
-.btn-break-start { background-color: #f1c40f; color: #333; }
-.btn-break-end { background-color: #e67e22; }
-.btn-out { background-color: #e74c3c; }
+.btn-secondary:hover { background-color: #7f8c8d; }
 
-/* MENUS COLAPSABLES ADMIN */
+/* ==========================================================
+   👥 6. MENÚS COLAPSABLES Y ADMINISTRACIÓN (SIDEBAR)
+   ========================================================== */
 .collapsible {
     background-color: #34495e;
     color: white;
     cursor: pointer;
-    padding: 12px;
+    padding: 12px 15px;
     width: 100%;
     border: none;
     text-align: left;
@@ -136,22 +296,135 @@ body, html {
     font-size: 14px;
     margin-top: 10px;
     border-radius: 4px;
+    font-weight: 600;
+    transition: background 0.2s;
 }
+
+.collapsible:hover, .active {
+    background-color: #415b76;
+}
+
 .content {
-    padding: 0 10px;
+    padding: 0 12px;
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.2s ease-out;
     background-color: #3d566e;
     border-radius: 0 0 4px 4px;
-}
-.content input, .content button {
-    width: 100%;
-    margin: 10px 0;
-    padding: 8px;
     box-sizing: border-box;
 }
 
+.content input {
+    width: 100%;
+    margin-top: 12px;
+    margin-bottom: 8px;
+    padding: 8px;
+    border: 1px solid #2c3e50;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.content button {
+    width: 100%;
+    margin-bottom: 12px;
+    padding: 9px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+}
+.content button:hover { background-color: #2980b9; }
+
+/* Lista de Usuarios creados */
+#user-list {
+    margin-top: 5px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.user-item {
+    display: flex;
+    flex-direction: column;
+    background: #34495e;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    border-bottom: 2px solid #2c3e50;
+    box-sizing: border-box;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.btn-delete {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: bold;
+    align-self: flex-start;
+    transition: background 0.2s;
+}
+.btn-delete:hover { background-color: #c0392b; }
+
+/* Utilitarios */
 .hidden { display: none !important; }
-.status-zone { margin: 15px 0; font-weight: bold; text-align: center; }
-.btn-secondary { width: 100%; padding: 10px; background-color: #95a5a6; color: white; border: none; border-radius: 5px; cursor: pointer; }
+
+
+/* ==========================================================
+   📱 7. REGLAS DE RESPONSIVIDAD (DISPOSITIVOS MÓVILES)
+   ========================================================== */
+@media (max-width: 768px) {
+    /* El contenedor cambia de fila a columna: Menú arriba, Marcado abajo */
+    .app-layout {
+        flex-direction: column;
+    }
+
+    /* El menú lateral se expande horizontalmente al 100% */
+    .sidebar {
+        width: 100%;
+        padding: 15px;
+        box-sizing: border-box;
+    }
+
+    .sidebar h2 {
+        margin-top: 5px;
+        font-size: 18px;
+    }
+
+    /* Reducción de márgenes y paddings en el panel central */
+    .main-content {
+        padding: 15px;
+    }
+
+    .dashboard-card {
+        padding: 20px;
+    }
+
+    #welcome-banner {
+        font-size: 21px;
+        text-align: center;
+        margin-bottom: 15px;
+    }
+
+    /* CRUCIAL: La cuadrícula pasa a ser de 1 sola columna para los botones */
+    .buttons-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .btn-clock {
+        padding: 15px;
+        font-size: 15px;
+    }
+}
