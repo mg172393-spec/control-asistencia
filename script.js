@@ -1,25 +1,21 @@
 // ==========================================
 // CONFIGURACIÓN CENTRAL DE SUPABASE
 // ==========================================
+// Eliminamos la redeclaración conflictiva y usamos la instancia global de forma segura
 const SUPABASE_URL = "https://lgejowajaxmmqdxwrsjc.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_13IRWRbW23xxWdVXeK8YOQ_A-SkI7oJ";
 
-if (typeof window.supabaseClient === 'undefined') {
-    window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+if (typeof window.asistenciaDB === 'undefined') {
+    // Inicializamos usando el cliente cargado por la librería externa sin pisar variables globales
+    window.asistenciaDB = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
-const asistenciaDB = window.supabaseClient;
+const dbCentral = window.asistenciaDB;
 
-// --- BASE DE DATOS LOCAL DE USUARIOS ---
+// Administradores de respaldo por si la red falla en el primer arranque
 const usuariosPorDefecto = [
-    { nombreCompleto: "Administrador Sistema", primerNombre: "admin", codigo: "12345", rol: "admin", fechaRegistro: "20/05/2026" },
-    { nombreCompleto: "Reynaldo Antonio Matamoros Centeno", primerNombre: "reynaldo", codigo: "54321", rol: "admin", fechaRegistro: "20/05/2026" },
-    { nombreCompleto: "Juan Pérez", primerNombre: "juan", codigo: "10023", rol: "empleado", fechaRegistro: "24/05/2026" }
+    { nombre_completo: "Administrador Sistema", primer_nombre: "admin", codigo: "12345", rol: "admin", fecha_registro: "20/05/2026" },
+    { nombre_completo: "Reynaldo Antonio Matamoros Centeno", primer_nombre: "reynaldo", codigo: "54321", rol: "admin", fecha_registro: "20/05/2026" }
 ];
-
-let baseUsuarios = JSON.parse(localStorage.getItem('usuarios_asistencia')) || usuariosPorDefecto;
-if (!localStorage.getItem('usuarios_asistencia')) {
-    localStorage.setItem('usuarios_asistencia', JSON.stringify(baseUsuarios));
-}
 
 let usuarioLogueado = null;
 let timerReloj = null;
@@ -51,9 +47,9 @@ const userListDiv = document.getElementById('user-list');
 const filterStartDate = document.getElementById('filter-start-date');
 const filterEndDate = document.getElementById('filter-end-date');
 
-// --- SISTEMA LOGIN ---
+// --- SISTEMA LOGIN SINCRO NUBE ---
 if (btnLogin) {
-    btnLogin.addEventListener('click', () => {
+    btnLogin.addEventListener('click', async () => {
         const nombreIngresado = loginName.value.trim().toLowerCase();
         const codigoIngresado = loginCode.value.trim();
 
@@ -63,26 +59,49 @@ if (btnLogin) {
             return;
         }
 
-        const usuarioEncontrado = baseUsuarios.find(u => u.primerNombre.toLowerCase() === nombreIngresado && u.codigo === codigoIngresado);
+        loginStatus.innerText = "🔍 Verificando credenciales en la nube...";
+        loginStatus.style.color = "orange";
 
-        if (usuarioEncontrado) {
-            usuarioLogueado = usuarioEncontrado;
-            if (loginScreen) loginScreen.style.display = 'none';
-            inicializarApp();
-        } else {
-            loginStatus.innerText = "❌ Nombre o código incorrectos.";
+        try {
+            // Buscamos al usuario directamente en la tabla 'usuarios' de Supabase
+            const { data: listaUsuarios, error } = await dbCentral
+                .from('usuarios')
+                .select('*')
+                .eq('primer_nombre', nombreIngresado)
+                .eq('codigo', codigoIngresado);
+
+            if (error) throw error;
+
+            let usuarioEncontrado = listaUsuarios && listaUsuarios.length > 0 ? listaUsuarios[0] : null;
+
+            // Si la tabla de la nube no encuentra al admin, verifica con los por defecto locales
+            if (!usuarioEncontrado) {
+                usuarioEncontrado = usuariosPorDefecto.find(u => u.primer_nombre === nombreIngresado && u.codigo === codigoIngresado);
+            }
+
+            if (usuarioEncontrado) {
+                usuarioLogueado = usuarioEncontrado;
+                if (loginScreen) loginScreen.style.display = 'none';
+                inicializarApp();
+            } else {
+                loginStatus.innerText = "❌ Nombre o código incorrectos.";
+                loginStatus.style.color = "red";
+            }
+        } catch (err) {
+            console.error(err);
+            loginStatus.innerText = "❌ Error de conexión con los servidores.";
             loginStatus.style.color = "red";
         }
     });
 }
 
 function inicializarApp() {
-    if (txtUsername && usuarioLogueado) txtUsername.value = usuarioLogueado.nombreCompleto;
+    if (txtUsername && usuarioLogueado) txtUsername.value = usuarioLogueado.nombre_completo;
     if (mainAppContainer) mainAppContainer.style.display = 'flex';
     establecerSaludo();
     iniciarRelojYClima();
 
-    if (usuarioLogueado && (usuarioLogueado.rol === 'admin' || usuarioLogueado.role === 'admin')) {
+    if (usuarioLogueado && usuarioLogueado.rol === 'admin') {
         if (sidebar) sidebar.classList.remove('hidden');
         actualizarListaUsuariosAdmin();
     } else {
@@ -91,9 +110,8 @@ function inicializarApp() {
     if (statusMessage) statusMessage.innerText = "";
 }
 
-// --- TAVERN / LIVE INFO SYSTEM (Reloj, Fecha y Clima) ---
+// --- CLIMA Y RELOJ ---
 function iniciarRelojYClima() {
-    // Actualizar Hora y Fecha cada segundo
     if (timerReloj) clearInterval(timerReloj);
     timerReloj = setInterval(() => {
         const ahora = new Date();
@@ -105,7 +123,6 @@ function iniciarRelojYClima() {
         }
     }, 1000);
 
-    // Obtener Clima de la API basado en la Ubicación Actual
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(async (position) => {
             try {
@@ -138,7 +155,7 @@ function establecerSaludo() {
     else if (hora >= 12 && hora < 19) saludo = "☀️ Buenas tardes";
     else saludo = "🌙 Buenas noches";
 
-    welcomeBanner.innerText = `${saludo}, ${usuarioLogueado.nombreCompleto}`;
+    welcomeBanner.innerText = `${saludo}, ${usuarioLogueado.nombre_completo}`;
 }
 
 if (btnLogout) {
@@ -188,7 +205,7 @@ async function procesarMarcado(accion) {
             const urlMapa = `https://maps.google.com/?q=${latitud},${longitud}`;
 
             try {
-                const { data: filas, error: fetchError } = await asistenciaDB
+                const { data: filas, error: fetchError } = await dbCentral
                     .from('fichajes')
                     .select('*')
                     .eq('nombre', nombre)
@@ -204,7 +221,7 @@ async function procesarMarcado(accion) {
                         return;
                     }
                     
-                    const { error: insertError } = await asistenciaDB
+                    const { error: insertError } = await dbCentral
                         .from('fichajes')
                         .insert([{
                             nombre: nombre,
@@ -241,7 +258,7 @@ async function procesarMarcado(accion) {
                         datosActualizados.hora_salida = horaActual;
                     }
 
-                    const { error: updateError } = await asistenciaDB
+                    const { error: updateError } = await dbCentral
                         .from('fichajes')
                         .update(datosActualizados)
                         .eq('id', registroExistente.id);
@@ -269,92 +286,126 @@ function mostrarMensaje(texto, color) {
     }
 }
 
-// --- PANEL CONTROL USUARIOS ---
+// --- PANEL CONTROL USUARIOS EN LA NUBE ---
 if (btnAddUser) {
-    btnAddUser.addEventListener('click', () => {
+    btnAddUser.addEventListener('click', async () => {
         const nombreCompleto = newFullName ? newFullName.value.trim() : '';
         if (!nombreCompleto) {
             alert("Por favor ingrese el nombre y apellido.");
             return;
         }
 
-        const primerNombre = nombreCompleto.split(" ")[0].toLowerCase();
-        
-        let nuevoCodigo;
-        let codigoDuplicado = true;
-        while (codigoDuplicado) {
-            nuevoCodigo = Math.floor(10000 + Math.random() * 90000).toString();
-            codigoDuplicado = baseUsuarios.some(u => u.codigo === nuevoCodigo);
-        }
+        try {
+            // Descargamos códigos existentes para evitar colisiones
+            const { data: todosLosUsuarios, error: fetchError } = await dbCentral
+                .from('usuarios')
+                .select('codigo');
 
-        const fechaActualStr = new Date().toLocaleDateString();
+            if (fetchError) throw fetchError;
 
-        const nuevoUsuario = {
-            nombreCompleto: nombreCompleto,
-            primerNombre: primerNombre,
-            codigo: nuevoCodigo,
-            rol: "empleado",
-            fechaRegistro: fechaActualStr
-        };
-
-        baseUsuarios.push(nuevoUsuario);
-        localStorage.setItem('usuarios_asistencia', JSON.stringify(baseUsuarios));
-        if (newFullName) newFullName.value = "";
-        
-        actualizarListaUsuariosAdmin();
-        
-        if (userListDiv && userListDiv.parentElement) {
-            const contentDiv = userListDiv.parentElement;
-            if (contentDiv.style.maxHeight) {
-                contentDiv.style.maxHeight = contentDiv.scrollHeight + "px";
+            const primerNombre = nombreCompleto.split(" ")[0].trim().toLowerCase();
+            
+            let nuevoCodigo;
+            let codigoDuplicado = true;
+            while (codigoDuplicado) {
+                nuevoCodigo = Math.floor(10000 + Math.random() * 90000).toString();
+                codigoDuplicado = todosLosUsuarios.some(u => u.codigo === nuevoCodigo);
             }
+
+            const fechaActualStr = new Date().toLocaleDateString();
+
+            // Guardamos directamente en la tabla remota
+            const { error: insertError } = await dbCentral
+                .from('usuarios')
+                .insert([{
+                    nombre_completo: nombreCompleto,
+                    primer_nombre: primerNombre,
+                    codigo: nuevoCodigo,
+                    rol: "empleado",
+                    fecha_registro: fechaActualStr
+                }]);
+
+            if (insertError) throw insertError;
+
+            if (newFullName) newFullName.value = "";
+            
+            actualizarListaUsuariosAdmin();
+            
+            if (userListDiv && userListDiv.parentElement) {
+                const contentDiv = userListDiv.parentElement;
+                if (contentDiv.style.maxHeight) {
+                    contentDiv.style.maxHeight = contentDiv.scrollHeight + "px";
+                }
+            }
+
+            alert(`¡Usuario guardado e indexado en la NUBE!\n\nNombre: ${nombreCompleto}\nCódigo de Acceso: ${nuevoCodigo}`);
+        } catch (err) {
+            console.error(err);
+            alert("❌ Error de comunicación al registrar en la nube.");
         }
-
-        alert(`Usuario Registrado:\nNombre: ${nombreCompleto}\nCódigo Acceso: ${nuevoCodigo}\n(Inicia sesión con "${primerNombre}")`);
     });
 }
 
-function actualizarListaUsuariosAdmin() {
+async function actualizarListaUsuariosAdmin() {
     if (!userListDiv) return;
-    userListDiv.innerHTML = "";
-    baseUsuarios.forEach(u => {
-        const item = document.createElement('div');
-        item.className = 'user-item';
-        const fRegistro = u.fechaRegistro || "Antes del 25/05/2026";
+    userListDiv.innerHTML = "<div style='color: #aaa; padding: 10px;'>🔄 Sincronizando desde la nube...</div>";
+    
+    try {
+        const { data: usuariosNube, error } = await dbCentral
+            .from('usuarios')
+            .select('*');
+
+        if (error) throw error;
+
+        userListDiv.innerHTML = "";
         
-        item.innerHTML = `
-            <div class="user-info">
-                <span>${u.nombreCompleto} (<b>${u.primerNombre}</b>)</span>
-                <span style="color: #aaa; font-size: 11px;">Código: <b>${u.codigo}</b></span>
-                <span style="color: #5dade2; font-size: 11px; font-weight: bold;">📅 Reg: ${fRegistro}</span>
-            </div>
-            <button class="btn-delete" onclick="eliminarUsuario('${u.codigo}')">🗑️ Borrar</button>
-        `;
-        userListDiv.appendChild(item);
-    });
+        let listaFinal = [...usuariosNube];
+        usuariosPorDefecto.forEach(def => {
+            if (!listaFinal.some(u => u.codigo === def.codigo)) {
+                listaFinal.unshift(def);
+            }
+        });
+
+        listaFinal.forEach(u => {
+            const item = document.createElement('div');
+            item.className = 'user-item';
+            const fRegistro = u.fecha_registro || "25/05/2026";
+            
+            item.innerHTML = `
+                <div class="user-info">
+                    <span>${u.nombre_completo} (<b>${u.primer_nombre}</b>)</span>
+                    <span style="color: #aaa; font-size: 11px;">Código: <b>${u.codigo}</b></span>
+                    <span style="color: #5dade2; font-size: 11px; font-weight: bold;">📅 Reg: ${fRegistro}</span>
+                </div>
+                <button class="btn-delete" onclick="eliminarUsuario('${u.codigo}')">🗑️ Borrar</button>
+            `;
+            userListDiv.appendChild(item);
+        });
+    } catch (e) {
+        userListDiv.innerHTML = "<div style='color: red; padding: 10px;'>❌ Error al enlazar listado remoto.</div>";
+    }
 }
 
-window.eliminarUsuario = function(codigo) {
-    const usuario = baseUsuarios.find(u => u.codigo === codigo);
-    if (!usuario) return;
-
+window.eliminarUsuario = async function(codigo) {
     if (usuarioLogueado && usuarioLogueado.codigo === codigo) {
         alert("❌ No puedes eliminar tu propio usuario de administrador mientras tienes la sesión iniciada.");
         return;
     }
 
-    const confirmar = confirm(`⚠ ¿Estás seguro de que deseas eliminar permanentemente a "${usuario.nombreCompleto}"?`);
+    const confirmar = confirm(`⚠ ¿Estás seguro de que deseas eliminar permanentemente a este usuario de la nube?`);
     
     if (confirmar) {
-        baseUsuarios = baseUsuarios.filter(u => u.codigo !== codigo);
-        localStorage.setItem('usuarios_asistencia', JSON.stringify(baseUsuarios));
-        actualizarListaUsuariosAdmin();
-        
-        if (userListDiv && userListDiv.parentElement) {
-            const contentDiv = userListDiv.parentElement;
-            if (contentDiv.style.maxHeight) {
-                contentDiv.style.maxHeight = contentDiv.scrollHeight + "px";
-            }
+        try {
+            const { error } = await dbCentral
+                .from('usuarios')
+                .delete()
+                .eq('codigo', codigo);
+
+            if (error) throw error;
+
+            actualizarListaUsuariosAdmin();
+        } catch (e) {
+            alert("❌ No se pudo eliminar el registro de la base de datos central.");
         }
     }
 };
@@ -363,7 +414,7 @@ window.eliminarUsuario = function(codigo) {
 async function descargarExcelNativo() {
     mostrarMensaje('🔄 Solicitando registros históricos al servidor central...', 'orange');
 
-    const { data: todosLosRegistros, error: queryError } = await asistenciaDB
+    const { data: todosLosRegistros, error: queryError } = await dbCentral
         .from('fichajes')
         .select('*');
 
