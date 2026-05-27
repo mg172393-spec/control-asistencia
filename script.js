@@ -6,8 +6,11 @@ const SUPABASE_URL = "https://lgejowajaxmmqdxwrsjc.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_13IRWRbW23xxWdVXeK8YOQ_A-SkI7oJ";
 
 // Inicialización nativa del cliente de la base de datos en la nube
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+// Validar si 'supabase' ya existe en el entorno global para evitar que la página se congele
+if (typeof window.supabaseClient === 'undefined') {
+    window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+const supabase = window.supabaseClient;
 // --- BASE DE DATOS LOCAL DE USUARIOS (SISTEMA DE ACCESO) ---
 const usuariosPorDefecto = [
     { nombreCompleto: "Administrador Sistema", primerNombre: "admin", codigo: "12345", rol: "admin", fechaRegistro: "20/05/2026" },
