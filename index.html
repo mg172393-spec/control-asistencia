@@ -5,96 +5,86 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Fichaje y Control de Asistencia</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-    <div id="login-screen" class="login-container">
-        <div class="login-box">
-            <h2>🔑 Control de Asistencia</h2>
-            <p>Ingrese sus credenciales para acceder al sistema</p>
-            <div class="input-group">
-                <label for="login-name">Usuario (Primer Nombre):</label>
-                <input type="text" id="login-name" placeholder="Ej: admin, reynaldo, juan...">
-            </div>
-            <div class="input-group">
-                <label for="login-code">Código de Acceso:</label>
-                <input type="password" id="login-code" placeholder="Ingrese su código de 5 dígitos">
-            </div>
-            <button id="btn-login" class="btn-primary">Iniciar Sesión</button>
-            <div id="login-status" class="status-alert"></div>
-        </div>
-    </div>
+  <div id="login-screen" class="login-container">
+      <div class="login-box">
+          <h2>🔑 Control de Asistencia</h2>
+          <p>Ingrese sus credenciales para acceder al sistema</p>
+          
+          <label>Usuario (Primer Nombre):</label>
+          <input type="text" id="login-name" placeholder="Ej: admin, reynaldo, juan...">
+          
+          <label>Código de Acceso:</label>
+          <input type="password" id="login-code" placeholder="Ingrese su código de 5 dígitos">
+          
+          <button id="btn-login">Iniciar Sesión</button>
+          <div id="login-status"></div>
+      </div>
+  </div>
 
-    <div class="app-container">
-        
-        <aside id="sidebar" class="sidebar hidden">
-            <div class="sidebar-header">
-                <h3>🛡️ Panel Admin</h3>
-            </div>
-            <div class="sidebar-content">
-                
-                <button class="collapsible">➕ Agregar Nuevo Usuario</button>
-                <div class="collapsible-content">
-                    <div class="admin-box">
-                        <label for="new-user-fullname">Nombre y Apellido:</label>
-                        <input type="text" id="new-user-fullname" placeholder="Ej: Maria López">
-                        <button id="btn-add-user" class="btn-admin">Registrar en Sistema</button>
-                    </div>
-                </div>
+  <div id="main-app-container" class="app-layout" style="display: none;">
+      
+      <aside id="sidebar" class="sidebar hidden">
+          <h2>📊 Panel Admin</h2>
+          <hr>
+          <button class="collapsible">➕ Agregar Nuevo Usuario</button>
+          <div class="content">
+              <input type="text" id="new-user-fullname" placeholder="Nombre Completo">
+              <button id="btn-add-user">Guardar Usuario</button>
+          </div>
 
-                <button class="collapsible">📊 Reportes por Fecha</button>
-                <div class="collapsible-content">
-                    <div class="admin-box">
-                        <div class="date-group">
-                            <label for="filter-start-date">Desde:</label>
-                            <input type="date" id="filter-start-date">
-                        </div>
-                        <div class="date-group">
-                            <label for="filter-end-date">Hasta:</label>
-                            <input type="date" id="filter-end-date">
-                        </div>
-                        <button id="btn-excel" class="btn-success">💾 Descargar Rango</button>
-                    </div>
-                </div>
+          <button class="collapsible">📅 Reportes por Fecha</button>
+          <div class="content">
+              <label>Desde:</label>
+              <input type="date" id="filter-start-date">
+              <label>Hasta:</label>
+              <input type="date" id="filter-end-date">
+              <button id="btn-excel">📊 Descargar Excel</button>
+          </div>
 
-                <button class="collapsible">👥 Usuarios Registrados</button>
-                <div class="collapsible-content">
-                    <div id="user-list" class="user-list-container"></div>
-                </div>
+          <button class="collapsible">👥 Usuarios Registrados</button>
+          <div class="content">
+              <div id="user-list"></div>
+          </div>
+      </aside>
 
-            </div>
-        </aside>
+      <main class="main-content">
+          <div class="dashboard-card">
+              
+              <div id="weather-box" class="weather-widget">
+                  <div id="live-date">📅 Cargando fecha...</div>
+                  <div id="live-time">⏰ 00:00:00</div>
+                  <div id="live-weather">🌤️ Buscando temperatura...</div>
+              </div>
 
-        <main class="main-content">
-            <header class="main-header">
-                <h2 id="welcome-banner">¡Bienvenido al Sistema!</h2>
-                <button id="btn-logout" class="btn-danger">🚪 Cerrar Sesión</button>
-            </header>
+              <h1 id="welcome-banner">---</h1>
+              
+              <div class="user-identified-box">
+                  <label>Empleado Identificado:</label>
+                  <input type="text" id="username" readonly>
+              </div>
 
-            <section class="interface-box">
-                <div class="user-identity">
-                    <label for="username">Empleado Identificado:</label>
-                    <input type="text" id="username" readonly>
-                </div>
+              <p class="instruction-text">Seleccione la acción correspondiente a su estado actual:</p>
+              
+              <div class="buttons-grid">
+                  <button id="btn-entrada" class="btn-clock btn-in">🌅 Registrar Entrada</button>
+                  <button id="btn-inicio-libre" class="btn-clock btn-break-start">☕ Iniciar Tiempo Libre</button>
+                  <button id="btn-fin-libre" class="btn-clock btn-break-end">💻 Fin Tiempo Libre</button>
+                  <button id="btn-salida" class="btn-clock btn-out">🚪 Registrar Salida</button>
+              </div>
 
-                <p class="instruction-text">Seleccione la acción correspondiente a su estado actual:</p>
+              <div id="status-message" class="status-zone"></div>
 
-                <div class="grid-buttons">
-                    <button id="btn-entrada" class="btn-action entrada">🌅 Registrar Entrada</button>
-                    <button id="btn-inicio-libre" class="btn-action libre-inicio">☕ Iniciar Tiempo Libre</button>
-                    <button id="btn-fin-libre" class="btn-action libre-fin">💻 Fin Tiempo Libre</button>
-                    <button id="btn-salida" class="btn-action salida">👋 Registrar Salida</button>
-                </div>
+              <hr class="separator">
+              <button id="btn-logout" class="btn-secondary">🔒 Cerrar Sesión</button>
+          </div>
+      </main>
 
-                <div class="status-container">
-                    <p id="status-message"></p>
-                </div>
-            </section>
-        </main>
+  </div>
 
-    </div>
-
-    <script src="script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="script.js"></script>
 </body>
 </html>
