@@ -2,16 +2,14 @@
 // CONFIGURACIÓN CENTRAL DE SUPABASE
 // ==========================================
 const SUPABASE_URL = "https://lgejowajaxmmqdxwrsjc.supabase.co";
-// Recuerda usar el icono de los dos cuadritos en Supabase para obtener tu clave real sin las "xx"
 const SUPABASE_ANON_KEY = "sb_publishable_13IRWRbW23xxWdVXeK8YOQ_A-SkI7oJ";
 
-// Inicialización inmune a errores de re-declaración en el navegador
 if (typeof window.supabaseClient === 'undefined') {
     window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 const asistenciaDB = window.supabaseClient;
 
-// --- BASE DE DATOS LOCAL DE USUARIOS (SISTEMA DE ACCESO) ---
+// --- BASE DE DATOS LOCAL DE USUARIOS ---
 const usuariosPorDefecto = [
     { nombreCompleto: "Administrador Sistema", primerNombre: "admin", codigo: "12345", rol: "admin", fechaRegistro: "20/05/2026" },
     { nombreCompleto: "Reynaldo Antonio Matamoros Centeno", primerNombre: "reynaldo", codigo: "54321", rol: "admin", fechaRegistro: "20/05/2026" },
@@ -24,6 +22,7 @@ if (!localStorage.getItem('usuarios_asistencia')) {
 }
 
 let usuarioLogueado = null;
+let timerReloj = null;
 
 // Elementos del DOM
 const loginScreen = document.getElementById('login-screen');
@@ -32,6 +31,7 @@ const loginCode = document.getElementById('login-code');
 const btnLogin = document.getElementById('btn-login');
 const loginStatus = document.getElementById('login-status');
 
+const mainAppContainer = document.getElementById('main-app-container');
 const sidebar = document.getElementById('sidebar');
 const welcomeBanner = document.getElementById('welcome-banner');
 const txtUsername = document.getElementById('username');
@@ -78,7 +78,9 @@ if (btnLogin) {
 
 function inicializarApp() {
     if (txtUsername && usuarioLogueado) txtUsername.value = usuarioLogueado.nombreCompleto;
+    if (mainAppContainer) mainAppContainer.style.display = 'flex';
     establecerSaludo();
+    iniciarRelojYClima();
 
     if (usuarioLogueado && (usuarioLogueado.rol === 'admin' || usuarioLogueado.role === 'admin')) {
         if (sidebar) sidebar.classList.remove('hidden');
@@ -87,6 +89,45 @@ function inicializarApp() {
         if (sidebar) sidebar.classList.add('hidden');
     }
     if (statusMessage) statusMessage.innerText = "";
+}
+
+// --- TAVERN / LIVE INFO SYSTEM (Reloj, Fecha y Clima) ---
+function iniciarRelojYClima() {
+    // Actualizar Hora y Fecha cada segundo
+    if (timerReloj) clearInterval(timerReloj);
+    timerReloj = setInterval(() => {
+        const ahora = new Date();
+        if (document.getElementById('live-date')) {
+            document.getElementById('live-date').innerText = "📅 " + ahora.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        }
+        if (document.getElementById('live-time')) {
+            document.getElementById('live-time').innerText = "⏰ " + ahora.toLocaleTimeString();
+        }
+    }, 1000);
+
+    // Obtener Clima de la API basado en la Ubicación Actual
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            try {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                const respuesta = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+                const datosClima = await respuesta.json();
+                const temp = datosClima.current_weather.temperature;
+                if (document.getElementById('live-weather')) {
+                    document.getElementById('live-weather').innerText = `🌡️ Temperatura Actual: ${temp}°C`;
+                }
+            } catch (e) {
+                if (document.getElementById('live-weather')) {
+                    document.getElementById('live-weather').innerText = "🌡️ Clima indisponible";
+                }
+            }
+        }, () => {
+            if (document.getElementById('live-weather')) {
+                document.getElementById('live-weather').innerText = "📍 Permita el GPS para ver el clima";
+            }
+        });
+    }
 }
 
 function establecerSaludo() {
@@ -103,9 +144,11 @@ function establecerSaludo() {
 if (btnLogout) {
     btnLogout.addEventListener('click', () => {
         usuarioLogueado = null;
+        if (timerReloj) clearInterval(timerReloj);
         if (loginName) loginName.value = "";
         if (loginCode) loginCode.value = "";
         if (loginStatus) loginStatus.innerText = "";
+        if (mainAppContainer) mainAppContainer.style.display = 'none';
         if (loginScreen) loginScreen.style.display = 'flex';
         
         document.querySelectorAll('.collapsible').forEach(b => {
@@ -145,7 +188,6 @@ async function procesarMarcado(accion) {
             const urlMapa = `https://maps.google.com/?q=${latitud},${longitud}`;
 
             try {
-                // Modificado para usar asistenciaDB
                 const { data: filas, error: fetchError } = await asistenciaDB
                     .from('fichajes')
                     .select('*')
@@ -162,7 +204,6 @@ async function procesarMarcado(accion) {
                         return;
                     }
                     
-                    // Modificado para usar asistenciaDB
                     const { error: insertError } = await asistenciaDB
                         .from('fichajes')
                         .insert([{
@@ -200,7 +241,6 @@ async function procesarMarcado(accion) {
                         datosActualizados.hora_salida = horaActual;
                     }
 
-                    // Modificado para usar asistenciaDB
                     const { error: updateError } = await asistenciaDB
                         .from('fichajes')
                         .update(datosActualizados)
@@ -323,7 +363,6 @@ window.eliminarUsuario = function(codigo) {
 async function descargarExcelNativo() {
     mostrarMensaje('🔄 Solicitando registros históricos al servidor central...', 'orange');
 
-    // Modificado para usar asistenciaDB
     const { data: todosLosRegistros, error: queryError } = await asistenciaDB
         .from('fichajes')
         .select('*');
