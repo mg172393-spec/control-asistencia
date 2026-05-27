@@ -2,7 +2,7 @@
 // CONFIGURACIÓN CENTRAL DE SUPABASE
 // ==========================================
 const SUPABASE_URL = "https://lgejowajaxmmqdxwrsjc.supabase.co";
-// Al pegar el código, asegúrate de que use la clave completa que copiaste con el botón de los cuadritos
+// Recuerda usar el icono de los dos cuadritos en Supabase para obtener tu clave real sin las "xx"
 const SUPABASE_ANON_KEY = "sb_publishable_13IRWRbW23xxWdVXeK8YOQ_A-SkI7oJ";
 
 // Inicialización nativa del cliente de la base de datos en la nube
@@ -138,7 +138,7 @@ async function procesarMarcado(accion) {
             const longitud = position.coords.longitude.toString();
             const ahora = new Date();
             const fechaHoy = ahora.toLocaleDateString(); 
-            const horaActual = Scientific = ahora.toLocaleTimeString();
+            const horaActual = ahora.toLocaleTimeString(); // <-- CORREGIDO: Se quitó la palabra 'Scientific' errónea
             const urlMapa = `https://maps.google.com/?q=${latitud},${longitud}`;
 
             try {
