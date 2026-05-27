@@ -5,12 +5,12 @@ const SUPABASE_URL = "https://lgejowajaxmmqdxwrsjc.supabase.co";
 // Recuerda usar el icono de los dos cuadritos en Supabase para obtener tu clave real sin las "xx"
 const SUPABASE_ANON_KEY = "sb_publishable_13IRWRbW23xxWdVXeK8YOQ_A-SkI7oJ";
 
-// Inicialización nativa del cliente de la base de datos en la nube
-// Validar si 'supabase' ya existe en el entorno global para evitar que la página se congele
+// Inicialización inmune a errores de re-declaración en el navegador
 if (typeof window.supabaseClient === 'undefined') {
     window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
-const supabase = window.supabaseClient;
+const asistenciaDB = window.supabaseClient;
+
 // --- BASE DE DATOS LOCAL DE USUARIOS (SISTEMA DE ACCESO) ---
 const usuariosPorDefecto = [
     { nombreCompleto: "Administrador Sistema", primerNombre: "admin", codigo: "12345", rol: "admin", fechaRegistro: "20/05/2026" },
@@ -141,11 +141,12 @@ async function procesarMarcado(accion) {
             const longitud = position.coords.longitude.toString();
             const ahora = new Date();
             const fechaHoy = ahora.toLocaleDateString(); 
-            const horaActual = ahora.toLocaleTimeString(); // <-- CORREGIDO: Se quitó la palabra 'Scientific' errónea
+            const horaActual = ahora.toLocaleTimeString();
             const urlMapa = `https://maps.google.com/?q=${latitud},${longitud}`;
 
             try {
-                const { data: filas, error: fetchError } = await supabase
+                // Modificado para usar asistenciaDB
+                const { data: filas, error: fetchError } = await asistenciaDB
                     .from('fichajes')
                     .select('*')
                     .eq('nombre', nombre)
@@ -161,7 +162,8 @@ async function procesarMarcado(accion) {
                         return;
                     }
                     
-                    const { error: insertError } = await supabase
+                    // Modificado para usar asistenciaDB
+                    const { error: insertError } = await asistenciaDB
                         .from('fichajes')
                         .insert([{
                             nombre: nombre,
@@ -198,7 +200,8 @@ async function procesarMarcado(accion) {
                         datosActualizados.hora_salida = horaActual;
                     }
 
-                    const { error: updateError } = await supabase
+                    // Modificado para usar asistenciaDB
+                    const { error: updateError } = await asistenciaDB
                         .from('fichajes')
                         .update(datosActualizados)
                         .eq('id', registroExistente.id);
@@ -320,7 +323,8 @@ window.eliminarUsuario = function(codigo) {
 async function descargarExcelNativo() {
     mostrarMensaje('🔄 Solicitando registros históricos al servidor central...', 'orange');
 
-    const { data: todosLosRegistros, error: queryError } = await supabase
+    // Modificado para usar asistenciaDB
+    const { data: todosLosRegistros, error: queryError } = await asistenciaDB
         .from('fichajes')
         .select('*');
 
