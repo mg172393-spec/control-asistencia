@@ -461,22 +461,25 @@ async function descargarExcelNativo() {
     }
 
     let filasCSV = [];
-    filasCSV.push("Nombre;Fecha;Hora Entrada;Inicio Tiempo Libre;Fin Tiempo Libre;Hora Salida;Latitud;Longitud;Enlace Mapa");
+    // 1. Cambiar los encabezados para que usen comas (,) en lugar de puntos y comas (;)
+filasCSV.push("Nombre,Fecha,Hora Entrada,Inicio Tiempo Libre,Fin Tiempo Libre,Hora Salida,Latitud,Longitud,Enlace Mapa");
 
-    registrosFiltrados.forEach(r => {
-        const nombre = r.nombre || '---';
-        const fecha = r.fecha || '---';
-        const entrada = r.hora_entrada || '---';
-        const iniLibre = r.inicio_libre || '---';
-        const finLibre = r.fin_libre || '---';
-        const salida = r.hora_salida || '---';
-        
-        const cellLat = r.latitud ? `="${r.latitud}"` : '"---"';
-        const cellLon = r.longitud ? `="${r.longitud}"` : '"---"';
-        const cellMap = r.mapa ? `="${r.mapa}"` : '"---"';
+registrosFiltrados.forEach(r => {
+    const nombre = r.nombre || '---';
+    const fecha = r.fecha || '---';
+    const entrada = r.hora_entrada || '---';
+    const iniLibre = r.inicio_libre || '---';
+    const finLibre = r.fin_libre || '---';
+    const salida = r.hora_salida || '---';
+    
+    // Al limpiar comillas internas de Excel se asegura la lectura en teléfonos
+    const cellLat = r.latitud ? r.latitud : '---';
+    const cellLon = r.longitud ? r.longitud : '---';
+    const cellMap = r.mapa ? r.mapa : '---';
 
-        filasCSV.push(`${nombre};${fecha};${entrada};${iniLibre};${finLibre};${salida};${cellLat};${cellLon};${cellMap}`);
-    });
+    // 2. Unir las variables con comas (,) en lugar de puntos y comas (;)
+    filasCSV.push(`"${nombre}","${fecha}","${entrada}","${iniLibre}","${finLibre}","${salida}","${cellLat}","${cellLon}","${cellMap}"`);
+});
 
     let textoFinal = filasCSV.join("\r\n");
     const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
