@@ -461,47 +461,32 @@ async function descargarExcelNativo() {
         return;
     }
 
-    let filasCSV = [];
-    
-    // Instrucción para forzar a Excel en PC a usar comas como separador de columnas
-    filasCSV.push("sep=,");
-    filasCSV.push("Nombre,Fecha,Hora Entrada,Inicio Tiempo Libre,Fin Tiempo Libre,Hora Salida,Latitud,Longitud,Enlace Mapa");
+    // 1. Preparamos la estructura de datos pura en formato JSON
+    const datosExcel = registrosFiltrados.map(r => ({
+        "Nombre": r.nombre || '---',
+        "Fecha": r.fecha || '---',
+        "Hora Entrada": r.hora_entrada || '---',
+        "Inicio Tiempo Libre": r.inicio_libre || '---',
+        "Fin Tiempo Libre": r.fin_libre || '---',
+        "Hora Salida": r.hora_salida || '---',
+        "Latitud": r.latitud ? r.latitud : '---',
+        "Longitud": r.longitud ? r.longitud : '---',
+        "Enlace Mapa": r.mapa ? r.mapa : '---'
+    }));
 
-    registrosFiltrados.forEach(r => {
-        const nombre = r.nombre || '---';
-        const fecha = r.fecha || '---';
-        const entrada = r.hora_entrada || '---';
-        const iniLibre = r.inicio_libre || '---';
-        const finLibre = r.fin_libre || '---';
-        const salida = r.hora_salida || '---';
-        
-        const cellLat = r.latitud ? r.latitud : '---';
-        const cellLon = r.longitud ? r.longitud : '---';
-        const cellMap = r.mapa ? r.mapa : '---';
+    // 2. Creamos el libro de trabajo Excel nativo (.xlsx)
+    const hoja = XLSX.utils.json_to_sheet(datosExcel);
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, "Asistencia");
 
-        filasCSV.push(`"${nombre}","${fecha}","${entrada}","${iniLibre}","${finLibre}","${salida}","${cellLat}","${cellLon}","${cellMap}"`);
-    });
-
-    let textoFinal = filasCSV.join("\r\n");
-    const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
-    const blob = new Blob([BOM, textoFinal], { type: 'text/csv;charset=utf-8;' });
-    
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    
-    link.setAttribute("href", url);
+    // 3. Generamos la descarga automática
     const sufijoFecha = (fechaInicioStr ? `_desde_${fechaInicioStr}` : '') + (fechaFinStr ? `_hasta_${fechaFinStr}` : '');
-    link.setAttribute("download", `Reporte_General_Asistencia${sufijoFecha}.csv`);
-    
-    document.body.appendChild(link);
-    link.click();
-    
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const nombreArchivo = `Reporte_General_Asistencia${sufijoFecha}.xlsx`;
+
+    XLSX.writeFile(libro, nombreArchivo);
 
     mostrarMensaje('📊 ¡Reporte General Unificado descargado con éxito!', 'green');
 }
-
 // --- MANEJADOR DE MENÚS COLAPSABLES ---
 document.addEventListener("DOMContentLoaded", () => {
     const colapsables = document.querySelectorAll(".collapsible");
