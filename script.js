@@ -1,18 +1,15 @@
-<script>
 // ==========================================
 // CONFIGURACIÓN CENTRAL DE SUPABASE
 // ==========================================
-// Eliminamos la redeclaración conflictiva y usamos la instancia global de forma segura
 const SUPABASE_URL = "https://lgejowajaxmmqdxwrsjc.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_13IRWRbW23xxWdVXeK8YOQ_A-SkI7oJ";
 
 if (typeof window.asistenciaDB === 'undefined') {
-    // Inicializamos usando el cliente cargado por la librería externa sin pisar variables globales
     window.asistenciaDB = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 const dbCentral = window.asistenciaDB;
 
-// Administradores de respaldo por si la red falla en el primer arranque
+// Administradores de respaldo
 const usuariosPorDefecto = [
     { nombre_completo: "Administrador Sistema", primer_nombre: "admin", codigo: "12345", rol: "admin", fecha_registro: "20/05/2026" },
     { nombre_completo: "Reynaldo Antonio Matamoros Centeno", primer_nombre: "reynaldo", codigo: "54321", rol: "admin", fecha_registro: "20/05/2026" }
@@ -64,7 +61,6 @@ if (btnLogin) {
         loginStatus.style.color = "orange";
 
         try {
-            // Buscamos al usuario directamente en la tabla 'usuarios' de Supabase
             const { data: listaUsuarios, error } = await dbCentral
                 .from('usuarios')
                 .select('*')
@@ -75,7 +71,6 @@ if (btnLogin) {
 
             let usuarioEncontrado = listaUsuarios && listaUsuarios.length > 0 ? listaUsuarios[0] : null;
 
-            // Si la tabla de la nube no encuentra al admin, verifica con los por defecto locales
             if (!usuarioEncontrado) {
                 usuarioEncontrado = usuariosPorDefecto.find(u => u.primer_nombre === nombreIngresado && u.codigo === codigoIngresado);
             }
@@ -297,7 +292,6 @@ if (btnAddUser) {
         }
 
         try {
-            // Descargamos códigos existentes para evitar colisiones
             const { data: todosLosUsuarios, error: fetchError } = await dbCentral
                 .from('usuarios')
                 .select('codigo');
@@ -315,7 +309,6 @@ if (btnAddUser) {
 
             const fechaActualStr = new Date().toLocaleDateString();
 
-            // Guardamos directamente en la tabla remota
             const { error: insertError } = await dbCentral
                 .from('usuarios')
                 .insert([{
@@ -411,7 +404,7 @@ window.eliminarUsuario = async function(codigo) {
     }
 };
 
-// --- REPORTE DE EXCEL CENTRALIZADO ---
+// --- REPORTE DE EXCEL (.XLSX MULTIPLATAFORMA) ---
 async function descargarExcelNativo() {
     mostrarMensaje('🔄 Solicitando registros históricos al servidor central...', 'orange');
 
@@ -461,7 +454,6 @@ async function descargarExcelNativo() {
         return;
     }
 
-    // 1. Preparamos la estructura de datos pura en formato JSON
     const datosExcel = registrosFiltrados.map(r => ({
         "Nombre": r.nombre || '---',
         "Fecha": r.fecha || '---',
@@ -474,12 +466,10 @@ async function descargarExcelNativo() {
         "Enlace Mapa": r.mapa ? r.mapa : '---'
     }));
 
-    // 2. Creamos el libro de trabajo Excel nativo (.xlsx)
     const hoja = XLSX.utils.json_to_sheet(datosExcel);
     const libro = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(libro, hoja, "Asistencia");
 
-    // 3. Generamos la descarga automática
     const sufijoFecha = (fechaInicioStr ? `_desde_${fechaInicioStr}` : '') + (fechaFinStr ? `_hasta_${fechaFinStr}` : '');
     const nombreArchivo = `Reporte_General_Asistencia${sufijoFecha}.xlsx`;
 
@@ -487,6 +477,7 @@ async function descargarExcelNativo() {
 
     mostrarMensaje('📊 ¡Reporte General Unificado descargado con éxito!', 'green');
 }
+
 // --- MANEJADOR DE MENÚS COLAPSABLES ---
 document.addEventListener("DOMContentLoaded", () => {
     const colapsables = document.querySelectorAll(".collapsible");
@@ -504,4 +495,3 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 });
-</script>
