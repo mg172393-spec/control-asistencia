@@ -1,3 +1,4 @@
+<script>
 // ==========================================
 // CONFIGURACIÓN CENTRAL DE SUPABASE
 // ==========================================
@@ -462,8 +463,7 @@ async function descargarExcelNativo() {
 
     let filasCSV = [];
     
-    // CORRECCIÓN PARA ESCRITORIO Y MÓVIL:
-    // Agregamos 'sep=,' en la primera línea para obligar a Excel en escritorio a separar por comas correctamente.
+    // Instrucción para forzar a Excel en PC a usar comas como separador de columnas
     filasCSV.push("sep=,");
     filasCSV.push("Nombre,Fecha,Hora Entrada,Inicio Tiempo Libre,Fin Tiempo Libre,Hora Salida,Latitud,Longitud,Enlace Mapa");
 
@@ -501,6 +501,7 @@ async function descargarExcelNativo() {
 
     mostrarMensaje('📊 ¡Reporte General Unificado descargado con éxito!', 'green');
 }
+
 // --- MANEJADOR DE MENÚS COLAPSABLES ---
 document.addEventListener("DOMContentLoaded", () => {
     const colapsables = document.querySelectorAll(".collapsible");
@@ -518,3 +519,4 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 });
+</script>
